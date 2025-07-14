@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dice1, Dice2, Dice3, Dice4, Dice5, Dice6 } from 'lucide-react';
 
 const DiceRoller = () => {
   const [diceValue, setDiceValue] = useState<number>(1);
+  const [sides, setSides] = useState<number>(6);
   const [isRolling, setIsRolling] = useState(false);
 
   const diceIcons = {
@@ -21,15 +24,23 @@ const DiceRoller = () => {
     
     // Simulate rolling animation
     const rollInterval = setInterval(() => {
-      setDiceValue(Math.floor(Math.random() * 6) + 1);
+      setDiceValue(Math.floor(Math.random() * sides) + 1);
     }, 100);
 
     // Stop after 1 second and set final value
     setTimeout(() => {
       clearInterval(rollInterval);
-      setDiceValue(Math.floor(Math.random() * 6) + 1);
+      setDiceValue(Math.floor(Math.random() * sides) + 1);
       setIsRolling(false);
     }, 1000);
+  };
+
+  const handleSidesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (value >= 2) {
+      setSides(value);
+      setDiceValue(1); // Reset dice value when sides change
+    }
   };
 
   const DiceIcon = diceIcons[diceValue as keyof typeof diceIcons];
@@ -43,15 +54,39 @@ const DiceRoller = () => {
           </CardTitle>
           <p className="text-gray-600 mt-2">Roll the dice and test your luck!</p>
         </CardHeader>
-        <CardContent className="flex flex-col items-center space-y-8">
-          <div className="relative">
-            <DiceIcon 
-              size={120} 
-              className={`text-indigo-600 transition-transform duration-300 ${
-                isRolling ? 'animate-spin' : 'hover:scale-110'
-              }`}
+        <CardContent className="flex flex-col items-center space-y-6">
+          <div className="w-full space-y-2">
+            <Label htmlFor="sides" className="text-sm font-medium text-gray-700">
+              Number of sides:
+            </Label>
+            <Input
+              id="sides"
+              type="number"
+              min="2"
+              max="100"
+              value={sides}
+              onChange={handleSidesChange}
+              className="text-center text-lg font-bold"
+              placeholder="Enter number of sides"
             />
-            {!isRolling && (
+          </div>
+
+          <div className="relative">
+            {DiceIcon && sides <= 6 ? (
+              <DiceIcon 
+                size={120} 
+                className={`text-indigo-600 transition-transform duration-300 ${
+                  isRolling ? 'animate-spin' : 'hover:scale-110'
+                }`}
+              />
+            ) : (
+              <div className={`w-32 h-32 border-4 border-indigo-600 rounded-lg flex items-center justify-center text-4xl font-bold text-indigo-600 transition-transform duration-300 ${
+                isRolling ? 'animate-spin' : 'hover:scale-110'
+              }`}>
+                {diceValue}
+              </div>
+            )}
+            {!isRolling && sides <= 6 && DiceIcon && (
               <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
                 {diceValue}
               </div>
@@ -69,9 +104,13 @@ const DiceRoller = () => {
           
           <div className="text-center">
             <p className="text-sm text-gray-500">
-              {diceValue === 6 ? "🎉 Lucky roll!" : 
-               diceValue >= 4 ? "😊 Good roll!" : 
+              {diceValue === sides ? "🎉 Maximum roll!" : 
+               diceValue >= Math.ceil(sides * 0.75) ? "😊 Great roll!" : 
+               diceValue >= Math.ceil(sides * 0.5) ? "🙂 Good roll!" :
                "🤞 Try again!"}
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              You rolled {diceValue} out of {sides}
             </p>
           </div>
         </CardContent>
